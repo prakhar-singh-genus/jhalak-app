@@ -18,38 +18,31 @@ const Login = () => {
     localStorage.clear();
   }, []);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!email || !password) {
       setErrorMessage('Both fields are required.');
       return;
     }
     localStorage.setItem('userEmail', email);
-    await fetchLoginData();
+    fetchData(); // ✅ Use original fetchData
   };
 
-  const fetchLoginData = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
       const loginRequest = new User(email, password);
       const loginSuccess = await AuthService.login(loginRequest);
 
-      if (loginSuccess.success) {
-        const result = loginSuccess?.data;
+      const result = loginSuccess?.data?.data; // ✅ Use the original .data?.data
+      if (loginSuccess.success && result) {
         localStorage.setItem('Token', result.token);
         localStorage.setItem('email', result.workEmail);
         localStorage.setItem('UserCode', result.employeeCode);
         localStorage.setItem('PlantCode', result.locationName);
         localStorage.setItem('UserName', result.employeeName.split(' ')[0]);
 
-        // 🚀 Fetch Plants and Projects (you must implement this API in your AuthService)
-        const response = await AuthService.getPlantsAndProjects(result.employeeCode); // 🔧
-        if (response.success) {
-          localStorage.setItem('PlantList', JSON.stringify(response.data.plants || []));
-          localStorage.setItem('ProjectList', JSON.stringify(response.data.projects || []));
-        }
-
-        navigate('/home');
+        navigate('/home'); // ✅ This was missing or blocked before
       } else {
         setLoading(false);
         setError("Invalid employee code or password.");
